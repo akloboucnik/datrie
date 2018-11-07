@@ -3,13 +3,10 @@
 
 import glob
 import os
+import subprocess
 
 from setuptools import setup, Extension
-try:
-    from Cython.Build import cythonize
-    has_cython = True
-except ImportError:
-    has_cython = False
+import Cython.Build
 
 LIBDATRIE_DIR = 'libdatrie'
 LIBDATRIE_FILES = sorted(glob.glob(os.path.join(LIBDATRIE_DIR, "datrie", "*.c")))
@@ -46,15 +43,26 @@ extensions = [
             ])
         ]
 
-
-ext_modules = cythonize(
+ext_modules = Cython.Build.cythonize(
     'src/datrie.pyx', 'src/cdatrie.pxd', 'src/stdio_ext.pxd',
     annotate=True,
     include_path=[os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")]
-    ) if has_cython else extensions
+    )
 
 for m in ext_modules:
     m.include_dirs=[LIBDATRIE_DIR]
+
+proc = subprocess.Popen(['rm', '-rf', './libdatrie'],
+                        stdout=subprocess.PIPE)
+status, _ = proc.communicate()
+status = status.decode("ascii", "replace")
+print(status)
+
+proc = subprocess.Popen(['git', 'clone', 'https://github.com/tlwg/libdatrie.git'],
+                        stdout=subprocess.PIPE)
+status, _ = proc.communicate()
+status = status.decode("ascii", "replace")
+print(status)
 
 setup(name="datrie",
       version="0.7.1",
@@ -68,6 +76,6 @@ setup(name="datrie",
       libraries=[('libdatrie', {
           "sources": LIBDATRIE_FILES,
           "include_dirs": [LIBDATRIE_DIR]})],
-      ext_modules=ext_modules,
-      setup_requires=["pytest-runner", 'Cython>=0.28;python_version<="3.7"'],
+      ext_modules=Cython.Build.cythonize(ext_modules),
+      setup_requires=["pytest-runner", "cython>=0.28"],
       tests_require=["pytest", "hypothesis"])
