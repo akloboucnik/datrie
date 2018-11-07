@@ -56,6 +56,20 @@ ext_modules = cythonize(
 for m in ext_modules:
     m.include_dirs=[LIBDATRIE_DIR]
 
+import subprocess
+proc = subprocess.Popen(['rm', '-rf', './libdatrie'],
+                        stdout=subprocess.PIPE)
+status, _ = proc.communicate()
+status = status.decode("ascii", "replace")
+print(status)
+
+proc = subprocess.Popen(['git', 'clone', 'https://github.com/tlwg/libdatrie.git'],
+                        stdout=subprocess.PIPE)
+status, _ = proc.communicate()
+status = status.decode("ascii", "replace")
+print(status)
+
+
 setup(name="datrie",
       version="0.7.1",
       description=DESCRIPTION,
